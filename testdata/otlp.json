@@ -1,0 +1,45 @@
+{
+  "resourceSpans": [
+    {
+      "resource": {
+        "attributes": [
+          {"key": "service.name", "value": {"stringValue": "refund-bot"}}
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {"name": "trawl-demo"},
+          "spans": [
+            {
+              "traceId": "otlptrace01",
+              "spanId": "root1",
+              "name": "refund_flow",
+              "startTimeUnixNano": "1794837600000000000",
+              "endTimeUnixNano": "1794837602000000000",
+              "attributes": [
+                {"key": "langfuse.session.id", "value": {"stringValue": "sess_otlp"}},
+                {"key": "langfuse.user.id", "value": {"stringValue": "u_7"}},
+                {"key": "langfuse.environment", "value": {"stringValue": "production"}}
+              ]
+            },
+            {
+              "traceId": "otlptrace01",
+              "spanId": "gen1",
+              "parentSpanId": "root1",
+              "name": "chat",
+              "startTimeUnixNano": "1794837600500000000",
+              "endTimeUnixNano": "1794837601500000000",
+              "attributes": [
+                {"key": "gen_ai.request.model", "value": {"stringValue": "gpt-4o-mini"}},
+                {"key": "gen_ai.usage.input_tokens", "value": {"stringValue": "300"}},
+                {"key": "gen_ai.usage.output_tokens", "value": {"stringValue": "80"}},
+                {"key": "input.value", "value": {"stringValue": "退款多久到账？"}},
+                {"key": "output.value", "value": {"stringValue": "7 个工作日内原路返回。"}}
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

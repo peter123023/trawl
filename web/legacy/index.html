@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trawl</title>
+<style>
+  :root{
+    --paper:#FAF8F4; --paper-sunk:#F1EDE5; --ink:#14130F;
+    --ink-70:#4A463D; --ink-45:#7A7568; --ink-25:#B5AFA2;
+    --rule:#DCD5C7; --stamp:#A8342A; --stamp-text:#8C2A21; --stamp-wash:#F3E3DE;
+    --signal:#2F6B4F;
+    --serif:"Source Serif 4","Noto Serif SC",Georgia,"Songti SC",serif;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --sans:system-ui,"Noto Sans SC",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .rail{position:fixed;inset:0 auto 0 0;width:56px;border-right:1px solid var(--rule);
+        display:flex;flex-direction:column;align-items:center;gap:22px;padding-top:18px;background:var(--paper)}
+  .rail .mark{font-family:var(--serif);font-size:20px;letter-spacing:.5px;margin-bottom:6px}
+  .rail .item{width:34px;height:34px;display:grid;place-items:center;color:var(--ink-45);font-size:15px;border-left:2px solid transparent}
+  .rail .item.active{color:var(--ink);border-left-color:var(--ink)}
+  .desk{margin-left:56px;padding:34px 44px 60px;max-width:1180px}
+  .masthead{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--rule);padding-bottom:14px}
+  .masthead h1{font-family:var(--serif);font-weight:600;font-size:19px;margin:0;letter-spacing:.3px}
+  .masthead .tail{font-family:var(--mono);font-size:11.5px;color:var(--ink-45)}
+  .numbers{display:flex;gap:56px;padding:26px 0 22px;border-bottom:1px solid var(--rule)}
+  .num .v{font-family:var(--serif);font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+  .num .k{font-size:12px;color:var(--ink-45);margin-top:8px;letter-spacing:.4px}
+  .bar{display:flex;gap:14px;align-items:center;padding:16px 0;border-bottom:1px solid var(--rule)}
+  .bar input{font-family:var(--sans);font-size:13px;padding:7px 10px;border:1px solid var(--rule);background:transparent;border-radius:2px;min-width:220px}
+  .bar .hint{font-family:var(--mono);font-size:11px;color:var(--ink-45);margin-left:auto}
+  table{width:100%;border-collapse:collapse}
+  thead th{text-align:left;font-size:10.5px;letter-spacing:.9px;text-transform:uppercase;color:var(--ink-45);font-weight:500;padding:12px 8px;border-bottom:1px solid var(--rule)}
+  tbody tr{border-bottom:1px solid var(--rule);cursor:pointer}
+  tbody tr:hover{background:var(--paper-sunk)}
+  td{padding:0 8px;height:40px;font-size:13px}
+  td.no{font-family:var(--mono);font-size:11.5px;color:var(--ink-45);width:48px}
+  td.name{font-size:13.5px}
+  td.mono{font-family:var(--mono);font-size:12px;color:var(--ink-70);font-variant-numeric:tabular-nums}
+  td .warn{color:var(--stamp-text);font-size:12px}
+  .case{display:grid;grid-template-columns:22% 52% 26%;gap:0;min-height:74vh}
+  .col{padding:26px 24px 40px;border-right:1px solid var(--rule)}
+  .col:last-child{border-right:0}
+  .col h2{font-size:10.5px;letter-spacing:.9px;text-transform:uppercase;color:var(--ink-45);font-weight:500;margin:0 0 18px}
+  .spine{position:relative}
+  .node{position:relative;padding:6px 0 16px 22px;cursor:pointer}
+  .node:before{content:"";position:absolute;left:4px;top:14px;width:7px;height:7px;border:1.5px solid var(--ink-25);border-radius:50%;background:var(--paper)}
+  .node:after{content:"";position:absolute;left:7px;top:21px;bottom:0;width:1px;background:var(--rule)}
+  .node:last-child:after{display:none}
+  .node.active:before{border-color:var(--stamp);background:var(--stamp)}
+  .node .n{font-size:13px;display:flex;gap:8px;align-items:baseline}
+  .node .t{font-family:var(--mono);font-size:11px;color:var(--ink-45);margin-top:3px}
+  .node .e{font-size:11px;color:var(--stamp-text);margin-left:auto}
+  .page{background:var(--paper-sunk);border:1px solid var(--rule);padding:16px 18px;font-family:var(--serif);font-size:14px;line-height:1.75;white-space:pre-wrap;word-break:break-word;max-height:42vh;overflow:auto}
+  .page .lbl{font-family:var(--sans);font-size:10.5px;letter-spacing:.8px;color:var(--ink-45);display:block;margin-bottom:8px}
+  .pages{display:flex;flex-direction:column;gap:18px}
+  .meta{display:flex;gap:26px;flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;color:var(--ink-70);margin-top:16px}
+  .verdict{position:sticky;top:26px}
+  .rubric{margin-bottom:18px}
+  .rubric .rk{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:7px}
+  .rubric .rk span:last-child{font-family:var(--mono);color:var(--ink-45);font-size:11px}
+  .dots{display:flex;gap:10px}
+  .dots button{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--ink-25);background:transparent;cursor:pointer;padding:0}
+  .dots button.on{border-color:var(--stamp);background:var(--stamp)}
+  textarea{width:100%;min-height:92px;font-family:var(--serif);font-size:13.5px;line-height:1.7;padding:10px;border:1px solid var(--rule);background:var(--paper);border-radius:2px;resize:vertical}
+  .acts{display:flex;flex-direction:column;gap:9px;margin-top:16px}
+  .btn{font-family:var(--sans);font-size:13px;letter-spacing:.6px;padding:11px 14px;border:1px solid var(--rule);background:transparent;border-radius:2px;cursor:pointer;text-align:center}
+  .btn.primary{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+  .btn.primary:hover{opacity:.86}
+  .btn.reject{border-color:var(--stamp);color:var(--stamp-text)}
+  .btn.reject:hover{background:var(--stamp-wash)}
+  .kbd{margin-top:18px;font-family:var(--mono);font-size:10.5px;color:var(--ink-45);line-height:1.9}
+  .stamped{position:absolute;right:24px;bottom:22px;font-family:var(--serif);color:var(--stamp);font-size:22px;letter-spacing:3px;border:2px solid var(--stamp);padding:6px 12px;transform:rotate(-8deg);opacity:0;pointer-events:none}
+  .stamped.on{animation:press .42s ease-out forwards}
+  @keyframes press{0%{opacity:0;transform:rotate(-8deg) scale(1.25)}60%{opacity:.92;transform:rotate(-8deg) scale(.98)}100%{opacity:.92;transform:rotate(-8deg) scale(1)}}
+  .empty{padding:60px 0;color:var(--ink-45);font-family:var(--serif);font-size:15px}
+  .scores{margin-top:22px;border-top:1px solid var(--rule);padding-top:14px}
+  .score{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--rule)}
+  .score .v{font-family:var(--mono);color:var(--stamp-text)}
+  .foot{margin-top:26px;font-family:var(--mono);font-size:11px;color:var(--ink-25)}
+</style>
+</head>
+<body>
+<nav class="rail">
+  <div class="mark">T</div>
+  <a class="item active" href="/" title="案件台账">☰</a>
+  <a class="item" href="/" title="链路">⌁</a>
+  <a class="item" href="/" title="评判">✓</a>
+  <a class="item" href="/" title="设置">⚙</a>
+</nav>
+<main class="desk" id="desk"><div class="empty">正在展开卷宗…</div></main>
+<script>
+const el = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+const ms = (n) => { const d = Number(n)||0; return d>=1000 ? (d/1000).toFixed(2)+"s" : d+"ms"; };
+const money = (n) => { n=Number(n||0); if(!n) return "—"; const s = n<1 ? n.toPrecision(3) : n.toFixed(2); return "$"+String(Number(s)); };
+const when = (t) => new Date(Number(t)).toLocaleString("zh-CN",{hour12:false});
+
+async function list(){
+  const r = await fetch("/api/traces?limit=60");
+  const j = await r.json();
+  const traces = j.traces || [];
+  const total = traces.length;
+  const errs = traces.filter(t=>t.hasError).length;
+  const cost = traces.reduce((a,t)=>a+(t.cost||0),0);
+  el("desk").innerHTML = `
+    <div class="masthead"><h1>案件台账</h1><div class="tail">TRAWL · local-first · ${new Date().toLocaleDateString("zh-CN")}</div></div>
+    <div class="numbers">
+      <div class="num"><div class="v">${total}</div><div class="k">近 7 日链路</div></div>
+      <div class="num"><div class="v">${errs}</div><div class="k">含异常</div></div>
+      <div class="num"><div class="v">${money(cost)}</div><div class="k">累计成本</div></div>
+    </div>
+    <div class="bar"><input id="q" placeholder="按名称筛选…" /><span class="hint">点击任意一行进入阅卷</span></div>
+    <table><thead><tr><th>编号</th><th>链路</th><th>节点</th><th>耗时</th><th>令牌</th><th>成本</th><th>时间</th></tr></thead>
+    <tbody>${traces.map((t,i)=>`
+      <tr onclick="location.href='/t/${encodeURIComponent(t.traceId)}'">
+        <td class="no">${String(i+1).padStart(2,"0")}</td>
+        <td class="name">${esc(t.name||t.traceId)} ${t.hasError?'<span class="warn">⚠ 异常</span>':''}</td>
+        <td class="mono">${t.spanCount}</td>
+        <td class="mono">${ms((t.endTime||t.startTime)-t.startTime)}</td>
+        <td class="mono">${t.tokens||0}</td>
+        <td class="mono">${money(t.cost)}</td>
+        <td class="mono">${when(t.startTime)}</td>
+      </tr>`).join("")}</tbody></table>
+    ${traces.length===0?`<div class="empty">此处应有一条链路。<br/>试着上报一次：<br/><span style="font-family:var(--mono);font-size:12px">curl -X POST localhost:8080/api/public/ingestion -H "Authorization: Bearer $TRAWL_SECRET" -d @sample.json</span></div>`:""}
+    <div class="foot">trawl · local-first · 单文件 SQLite</div>`;
+  const q = el("q");
+  q && q.addEventListener("input", () => {
+    const v = q.value.toLowerCase();
+    document.querySelectorAll("tbody tr").forEach(tr=>{
+      tr.style.display = tr.textContent.toLowerCase().includes(v) ? "" : "none";
+    });
+  });
+}
+
+let CASE = null, SCORES = [], ORDERED = [], ACTIVE = "", DOTS = {faithful:null, accurate:null};
+
+async function casePage(id){
+  const r = await fetch("/api/traces/" + encodeURIComponent(id));
+  if(!r.ok){ el("desk").innerHTML = `<div class="empty">卷宗未找到。</div>`; return; }
+  const j = await r.json();
+  const spans = j.spans || [], scores = j.scores || [];
+  CASE = spans; SCORES = scores;
+  const pref = spans.find(s=>s.type==="generation") || spans.find(s=>s.type!=="trace") || spans[0] || {};
+  ACTIVE = pref.spanId || "";
+  renderCase(id, spans, scores);
+}
+
+function tree(spans){
+  const byId = new Map(spans.map(s=>[s.spanId, s]));
+  const depth = new Map();
+  const calc = (s) => {
+    let d = 0, cur = s;
+    while(cur && cur.parentSpanId && byId.has(cur.parentSpanId) && d < 32){ d++; cur = byId.get(cur.parentSpanId); }
+    return d;
+  };
+  spans.forEach(s=>depth.set(s.spanId, calc(s)));
+  return depth;
+}
+
+function orderTree(spans){
+  const byId = new Map(spans.map(s=>[s.spanId, s]));
+  const kids = new Map(); const roots = [];
+  spans.forEach(s=>{
+    const p = s.parentSpanId;
+    if(p && byId.has(p)){ if(!kids.has(p)) kids.set(p, []); kids.get(p).push(s); }
+    else roots.push(s);
+  });
+  const out = []; const seen = new Set();
+  const walk = (s) => {
+    if(seen.has(s.spanId)) return;
+    seen.add(s.spanId); out.push(s);
+    (kids.get(s.spanId)||[]).sort((a,b)=>a.startTime-b.startTime).forEach(walk);
+  };
+  roots.sort((a,b)=>a.startTime-b.startTime).forEach(walk);
+  spans.forEach(s=>{ if(!seen.has(s.spanId)){ seen.add(s.spanId); out.push(s); } });
+  return out;
+}
+
+function metaOf(s){
+  let u = {}, c = {};
+  try { u = JSON.parse(s.usageDetails || "{}") || {}; } catch(e){}
+  try { c = JSON.parse(s.costDetails || "{}") || {}; } catch(e){}
+  const tok = Number(u.total || 0);
+  const inout = Number(u.input||0) ? ` (in ${u.input} / out ${u.output||0})` : "";
+  return `<span>model ${esc(s.model||"—")}</span>
+    <span>tokens ${tok}${inout}</span>
+    <span>cost ${money(c.total)}</span>
+    <span>level ${esc(s.level)}</span>`;
+}
+
+function renderCase(id, spans, scores){
+  const depth = tree(spans);
+  ORDERED = orderTree(spans);
+  const active = spans.find(s=>s.spanId===ACTIVE) || spans[0] || {};
+  el("desk").innerHTML = `
+  <div class="masthead"><h1>${esc((spans.find(s=>!s.parentSpanId)||active).name || id)}</h1><div class="tail">${esc(id)}</div></div>
+  <div class="case">
+    <section class="col"><h2>证据</h2><div class="spine">
+      ${ORDERED.map(s=>`
+        <div class="node ${s.spanId===ACTIVE?"active":""}" style="margin-left:${(depth.get(s.spanId)||0)*14}px" onclick="pick('${esc(s.spanId)}')">
+          <div class="n">${esc(s.name||s.type)} ${s.level==="ERROR"?'<span class="e">⚠ 异常</span>':""}</div>
+          <div class="t">${esc(s.type)} · ${s.endTime?ms(s.endTime-s.startTime):"—"}</div>
+        </div>`).join("")}
+    </div></section>
+    <section class="col"><h2>原文</h2><div class="pages">
+      <div class="page"><span class="lbl">输入</span>${esc(active.input||"—")}</div>
+      <div class="page"><span class="lbl">输出</span>${esc(active.output||"—")}</div>
+      <div class="meta">${metaOf(active)}</div>
+    </div></section>
+    <section class="col"><div class="verdict">
+      <h2>判词</h2>
+      <div class="rubric"><div class="rk"><span>忠实度</span><span id="v1">—</span></div>
+        <div class="dots">${[0,1,2,3].map(i=>`<button data-k="faithful" data-v="${i}" onclick="dot('faithful',${i})"></button>`).join("")}</div></div>
+      <div class="rubric"><div class="rk"><span>准确性</span><span id="v2">—</span></div>
+        <div class="dots">${[0,1,2,3].map(i=>`<button data-k="accurate" data-v="${i}" onclick="dot('accurate',${i})"></button>`).join("")}</div></div>
+      <div class="rk" style="font-size:12.5px;margin:14px 0 7px;display:flex;justify-content:space-between"><span>理由（必填）</span></div>
+      <textarea id="reason" placeholder="写下你判定的依据…"></textarea>
+      <div class="acts">
+        <button class="btn primary" onclick="submit(1)">通 过</button>
+        <button class="btn reject" onclick="submit(0)">不 通 过</button>
+        <button class="btn" onclick="submit(-1)">跳 过</button>
+      </div>
+      <div class="kbd">J/K 切换节点 · Space 通过 · X 不通过 · S 跳过</div>
+      ${scores.length?`<div class="scores">${scores.map(s=>`<div class="score"><span>${esc(s.name)}</span><span class="v">${s.value ?? s.stringValue}</span></div>`).join("")}</div>`:""}
+      <div class="stamped" id="stamp">已 判 定</div>
+    </div></section>
+  </div>`;
+  Object.entries(DOTS).forEach(([k,v])=>{
+    if(v===null) return;
+    document.querySelectorAll(`[data-k="${k}"]`).forEach(b=>b.classList.toggle("on", Number(b.dataset.v)===v));
+    const label = el(k==="faithful"?"v1":"v2"); if(label) label.textContent = v;
+  });
+}
+
+window.pick = (spanId) => { ACTIVE = spanId; renderCase(location.pathname.split("/").pop(), CASE, SCORES); };
+window.dot = (k,v) => {
+  DOTS[k] = v;
+  document.querySelectorAll(`[data-k="${k}"]`).forEach(b=>b.classList.toggle("on", Number(b.dataset.v)===v));
+  const label = el(k==="faithful"?"v1":"v2"); if(label) label.textContent = v;
+};
+window.submit = async (v) => {
+  const reason = (el("reason")||{}).value || "";
+  if(!reason.trim()){ alert("判词需要理由：没有依据的判定不可追溯。"); return; }
+  const traceId = location.pathname.split("/").pop();
+  const body = { traceId, name: "verdict", dataType: "NUMERIC", value: v, comment: reason,
+    authorName: "local", spanId: ACTIVE };
+  for(const [k,val] of Object.entries(DOTS)){
+    if(val===null) continue;
+    await fetch("/api/scores", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({...body, name: k, value: val})});
+  }
+  await fetch("/api/scores", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)});
+  const st = el("stamp"); if(st){ st.textContent = v===1?"通 过":v===0?"不 通 过":"已 跳 过"; st.classList.add("on"); }
+};
+
+document.addEventListener("keydown", (e)=>{
+  if(!CASE || !ORDERED.length) return;
+  const tag = (e.target||{}).tagName || "";
+  if(tag==="TEXTAREA" || tag==="INPUT") return;
+  const i = ORDERED.findIndex(s=>s.spanId===ACTIVE);
+  if(e.key==="j" && i>=0 && i+1<ORDERED.length){ pick(ORDERED[i+1].spanId); }
+  else if(e.key==="k" && i>0){ pick(ORDERED[i-1].spanId); }
+  else if(e.key===" "){ e.preventDefault(); submit(1); }
+  else if(e.key==="x" || e.key==="X"){ submit(0); }
+  else if(e.key==="s" || e.key==="S"){ submit(-1); }
+});
+
+if(location.pathname.startsWith("/t/")){
+  casePage(location.pathname.split("/").pop());
+} else {
+  list();
+}
+</script>
+</body>
+</html>

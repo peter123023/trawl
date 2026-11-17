@@ -1,0 +1,64 @@
+{
+  "batch": [
+    {
+      "id": "pe1",
+      "type": "trace-create",
+      "timestamp": "2026-11-16T10:00:00.000Z",
+      "body": {
+        "id": "trace_p1",
+        "name": "policy_v1_case",
+        "timestamp": "2026-11-16T10:00:00.000Z",
+        "environment": "production"
+      }
+    },
+    {
+      "id": "pe2",
+      "type": "generation-create",
+      "timestamp": "2026-11-16T10:00:01.000Z",
+      "body": {
+        "id": "gen_p1",
+        "traceId": "trace_p1",
+        "name": "answer",
+        "startTime": "2026-11-16T10:00:00.000Z",
+        "endTime": "2026-11-16T10:00:01.000Z",
+        "parentObservationId": "trace_p1",
+        "model": "gpt-4o-mini",
+        "promptName": "refund-policy",
+        "promptVersion": 1,
+        "input": "退款多久到账？",
+        "output": "7 个工作日内原路退回。",
+        "usageDetails": {"input": 980, "output": 180}
+      }
+    },
+    {
+      "id": "pe3",
+      "type": "trace-create",
+      "timestamp": "2026-11-16T10:05:00.000Z",
+      "body": {
+        "id": "trace_p2",
+        "name": "policy_v2_case",
+        "timestamp": "2026-11-16T10:05:00.000Z",
+        "environment": "production"
+      }
+    },
+    {
+      "id": "pe4",
+      "type": "generation-create",
+      "timestamp": "2026-11-16T10:05:01.000Z",
+      "body": {
+        "id": "gen_p2",
+        "traceId": "trace_p2",
+        "name": "answer",
+        "startTime": "2026-11-16T10:05:00.000Z",
+        "endTime": "2026-11-16T10:05:01.000Z",
+        "parentObservationId": "trace_p2",
+        "model": "gpt-4o-mini",
+        "promptName": "refund-policy",
+        "promptVersion": 2,
+        "input": "退款多久到账？",
+        "output": "原路退回，通常 7 个工作日；银行卡可能延迟 1 至 2 天。",
+        "usageDetails": {"input": 1050, "output": 240}
+      }
+    }
+  ]
+}

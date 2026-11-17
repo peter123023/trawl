@@ -1,0 +1,61 @@
+# Runtime data and local state (never commit)
+data/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+# API secrets may land in any custom data directory
+keys.txt
+
+# Verification and load-test scratch space
+# .run/ holds temporary scripts (judge stub); .run3/.run4/.run5 are multi-instance data dirs
+.run*/
+.run*.log
+*.log
+
+# Build artifacts
+bin/
+# `go build ./cmd/trawl` drops a trawl binary in the repo root (same name as the module dir)
+/trawl
+*.exe
+*.test
+*.out
+*.prof
+coverage.*
+# Vite default output dir; this project emits to internal/web/dist, which MUST be committed
+web/dist/
+web/.vite/
+dist/
+
+# Dependencies and caches
+node_modules/
+.cache/
+vendor/
+
+# Editors and OS files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+._*
+Thumbs.db
+
+# Local environment
+.env
+.env.*
+!.env.example
+*.local
+
+# Exception: the go:embed source tree must stay tracked
+# internal/web/dist is what `go:embed` reads; without it `go build` fails outright
+# and the single-binary promise breaks. Re-include it explicitly.
+!internal/web/dist/
+!internal/web/dist/**
+
+# Internal specs: product / technical / UI writing docs stay local
+# docs/screenshots is re-included because README embeds the images
+/docs/*
+!/docs/screenshots/
+!/docs/screenshots/**

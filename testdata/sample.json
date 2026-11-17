@@ -1,0 +1,80 @@
+{
+  "batch": [
+    {
+      "id": "evt_1",
+      "type": "trace-create",
+      "timestamp": "2026-11-16T14:00:00.000Z",
+      "body": {
+        "id": "trace_001",
+        "name": "refund_flow_v2",
+        "timestamp": "2026-11-16T14:00:00.000Z",
+        "userId": "u_42",
+        "sessionId": "sess_9",
+        "tags": ["refund", "prod"],
+        "environment": "production"
+      }
+    },
+    {
+      "id": "evt_2",
+      "type": "span-create",
+      "timestamp": "2026-11-16T14:00:00.120Z",
+      "body": {
+        "id": "span_retrieve",
+        "traceId": "trace_001",
+        "name": "retrieve_policy",
+        "startTime": "2026-11-16T14:00:00.000Z",
+        "endTime": "2026-11-16T14:00:00.120Z",
+        "parentObservationId": "trace_001",
+        "input": "用户问：退款多久到账？",
+        "output": "命中 policy#12（退款时效）"
+      }
+    },
+    {
+      "id": "evt_3",
+      "type": "generation-create",
+      "timestamp": "2026-11-16T14:00:00.520Z",
+      "body": {
+        "id": "gen_1",
+        "traceId": "trace_001",
+        "name": "answer",
+        "startTime": "2026-11-16T14:00:00.120Z",
+        "endTime": "2026-11-16T14:00:00.520Z",
+        "parentObservationId": "span_retrieve",
+        "model": "gpt-4o-mini",
+        "modelParameters": {"temperature": 0.2},
+        "input": "根据 policy#12 回答用户",
+        "output": "退款将在 7 个工作日内原路返回。",
+        "usageDetails": {"input": 1200, "output": 280}
+      }
+    },
+    {
+      "id": "evt_4",
+      "type": "span-create",
+      "timestamp": "2026-11-16T14:00:00.560Z",
+      "body": {
+        "id": "span_respond",
+        "traceId": "trace_001",
+        "name": "respond",
+        "startTime": "2026-11-16T14:00:00.520Z",
+        "endTime": "2026-11-16T14:00:00.560Z",
+        "parentObservationId": "trace_001"
+      }
+    },
+    {
+      "id": "evt_5",
+      "type": "span-update",
+      "timestamp": "2026-11-16T14:00:01.000Z",
+      "body": {
+        "id": "span_retrieve",
+        "traceId": "trace_001",
+        "name": "retrieve_policy",
+        "startTime": "2026-11-16T14:00:00.000Z",
+        "endTime": "2026-11-16T14:00:00.120Z",
+        "parentObservationId": "trace_001",
+        "input": "用户问：退款多久到账？",
+        "output": "命中 policy#12（退款时效）；置信度 0.91",
+        "metadata": {"reranked": true}
+      }
+    }
+  ]
+}
